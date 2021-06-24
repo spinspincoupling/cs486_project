@@ -110,7 +110,7 @@ d_ff = 2048
 d_embedding = 512
 num_head = 8
 num_stacks = 4
-encoder = 'resnet34'
+encoder = 'resnet18'
 num_frames = 103
 
 LEARNING_RATE = 0.0001
