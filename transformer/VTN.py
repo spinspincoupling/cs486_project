@@ -16,16 +16,11 @@ class VTN(nn.Module):
         for i in range(num_stacks):
             decoder_stacks.append(AttnDecoder())
         self.decoder = nn.Sequential(*decoder_stacks)
-        self.fc = nn.Linear(d_embedding+1, 1)
+        self.fc = nn.Linear(SEQ_SIZE+1, 1)
 
     def forward(self, clips, difficulty_levels):
         output = self.encoder(clips)
         output = self.decoder(output)
+        output = torch.mean(output, 1)
         output = self.fc(torch.cat(output, difficulty_levels, 1))
         return output
-
-
-if __name__ == "__main__":
-    model = VTN()
-    for name, param in model.named_parameters():
-        print(name, param.size())

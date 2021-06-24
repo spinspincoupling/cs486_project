@@ -102,8 +102,9 @@ class Encoder(nn.Module):
             self.conv_model = ResNet([2, 2, 2, 2])
 
     def forward(self, input):
-        outputs = []
-        for frame in input:
-            embedding = self.conv_model(frame)
-            outputs.append(embedding)
-        return torch.tensor(outputs)
+        # outputs = []
+        # for frame in input:
+        #     embedding = self.conv_model(frame)
+        #     outputs.append(embedding)
+        # treat input as a batch
+        return self.conv_model(input)
