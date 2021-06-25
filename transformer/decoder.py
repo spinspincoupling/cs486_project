@@ -21,6 +21,6 @@ class AttnDecoder(nn.Module):
         residual = output
         output = F.relu(self.ffn1(output), inplace=True)
         output = self.ffn2(output)
-
         output = output + residual
+        output = torch.squeeze(output)
         return output
