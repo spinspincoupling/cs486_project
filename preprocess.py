@@ -60,8 +60,8 @@ def processImagesForOneVideo(imageFolder):
 def convertVideosToNPArrays(pathOfVideoFiles, videoFileNames, outPathOfJPG):
     '''
     For example, pathOfVideoFile is in "/Users/bzjesus/Documents/CS486/diving", under
-    this folder, there are 102 videos
-    videoFileNames are defined the parameters, start from "001.avi" to "102.avi"
+    this folder, there are 370 videos
+    videoFileNames are defined the parameters, start from "001.avi" to "370.avi"
     outPathOfJPG is "./pics/"
 
     the function will call loadSingleVideo function and extract 103 frames(JPG files) for each video
@@ -108,6 +108,8 @@ def loadTrainTestData():
     :return:
     '''
     trainingIndexs, testingIndexs, difficultyLevels, overallScores = loadMatFiles()
+    if not os.path.isdir("./pics/"):
+        os.mkdir("./pics/")
     data = convertVideosToNPArrays(parameters.pathOfVideoFiles, generateVideoNames(), "./pics/")
     trainingData = data[trainingIndexs][0]
     testingData = data[testingIndexs][0]
