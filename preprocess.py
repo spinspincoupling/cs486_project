@@ -2,12 +2,13 @@
 import cv2
 import os
 import parameters
-import numpy as np
 import scipy.io
-from numpy import save
 import torchvision.transforms as transforms
 from PIL import Image
-import tensorflow as tf
+import PIL
+import torch
+import numpy as np
+from os import path
 def generateVideoNames():
     videoNames = []
     for i in range(1,371):
@@ -24,12 +25,17 @@ def loadMatFiles():
     '''
     trainingIndexs = scipy.io.loadmat("./data/split_300_70/training_idx.mat")['training_idx']-1
     testingIndexs = scipy.io.loadmat("./data/split_300_70/testing_idx.mat")['testing_idx']-1
-    difficultyLevels = scipy.io.loadmat("./data/diving_difficulty_level.mat")['difficulty_level']
-    overallScores = scipy.io.loadmat("./data/diving_overall_scores.mat")['overall_scores']
+    difficultyLevels = torch.from_numpy(scipy.io.loadmat("./data/diving_difficulty_level.mat")['difficulty_level'])
+    overallScores = torch.from_numpy(scipy.io.loadmat("./data/diving_overall_scores.mat")['overall_scores'])
+
     return trainingIndexs, testingIndexs, difficultyLevels, overallScores
 
-
-def loadTrainTestData():
+def toTensor(img):
+    img = torch.from_numpy(img.transpose((0, 3, 1, 2)))
+    return img.float().div(255).unsqueeze(0)
+def shape(a):
+    return (type(a),type(a[0]),type(a[0][0]),len(a),len(a[0]), a[0][0].shape)
+def processTrainTestData():
     '''
         data has shape (370, 103, 240, 320, 3)
         370 video data
@@ -42,15 +48,12 @@ def loadTrainTestData():
         overallScores: (370, 1)
         :return:
         '''
+    print(PIL.__version__)
     trainingIndexs, testingIndexs, difficultyLevels, overallScores = loadMatFiles()
     videoNames = generateVideoNames()
-    data = []
-    preprocess = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
+    trainingData = []
+    testingData = []
+    i = 0
     for videoName in videoNames:
         print("Processing",videoName)
         imgs = []
@@ -59,30 +62,49 @@ def loadTrainTestData():
             ret, frame = cap.read()
             if ret == False:
                 break
-            frame = Image.fromarray(frame)
-            frame = preprocess(frame)
-            temp = tf.keras.preprocessing.image.img_to_array(frame)
-            imgs.append(temp)
-        data.append(imgs)
+            frame = frame.astype("uint8")
+            temp = Image.fromarray(frame)
+            transformations = transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485,0.456,0.406],std=[0.229,0.224,0.225])
+            ])
+            processed = transformations(temp)
+            imgs.append(processed.numpy())
+        if i in trainingIndexs:
+            trainingData.append(imgs)
+        else:
+            testingData.append(imgs)
+        i+=1
+
     print("Done with all videos, converting to numpy array")
-    data = np.asarray(data)
-    data = data.reshape(data.shape[0],3, data.shape[1],data.shape[2],data.shape[3])
+    trainingData = torch.from_numpy(np.asarray(trainingData))
+    testingData = torch.from_numpy(np.asarray(testingData))
 
-    data = preprocess(data)
-    print("Loading up training and testing")
-    trainingData = data[trainingIndexs][0]
-    save("train.npy",trainingData)
-    testingData = data[testingIndexs][0]
-    save("test.npy",testingData)
-    print("Returning from loadTrainTestData")
+    return trainingData, testingData, difficultyLevels, overallScores
 
+
+def loadTrainTestData():
+    # if path.exists(parameters.processedTrainingPath) and path.exists(parameters.processedTestingPath):
+    #     _, _, difficultyLevels, overallScores = loadMatFiles()
+    #     trainingData = torch.load(parameters.processedTrainingPath)
+    #     testingData = torch.load(parameters.processedTestingPath)
+    #     return trainingData, testingData, difficultyLevels, overallScores
+    # else:
+    trainingData, testingData, difficultyLevels, overallScores = processTrainTestData()
+    # after first run above, save for future uses, DO NOT check in the .npy file, they are too large
+    print("First Run")
     print("trainingData:", trainingData.shape)
     print("testingData:", testingData.shape)
     print("difficultyLevels:", difficultyLevels.shape)
     print("overallScores:", overallScores.shape)
 
+    # torch.save(trainingData, "data/trainingData.pt")
+    # print("Finished saving training data , now we are saving testing data")
+    # torch.save(testingData, "data/testingData.pt")
 
-
+    return trainingData, testingData, difficultyLevels, overallScores
 
 
 
