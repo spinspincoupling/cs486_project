@@ -2,13 +2,13 @@ from math import *
 from dct1 import *
 from numpy import *
 
-def dct_dft_feat(boxes, fname_annot, len1, n_seg, feat_type):
+def dct_dft_feat(boxes, fname_annot, len1, n_seg):
 
     cents_x = (boxes[:, 0:-4:3] + boxes[:, 2:-4:3]) / 2
     cents_y = (boxes[:, 1:-4:3] + boxes[:, 3: -4:3]) / 2
 
     # read_annotation function
-    fr_s,fr_e, score2_vec= read_annotation(fname_annot)
+    fr_s,fr_e, score2_vec = read_annotation(fname_annot)
 
     feats = []
 
@@ -29,11 +29,6 @@ def dct_dft_feat(boxes, fname_annot, len1, n_seg, feat_type):
             dist_feat1 = dist_feat[round((j - 1) * r + 1): round(j * r),:]
 
         # feat1 and feat2 having an error here
-        feat1 = None
-        if (feat_type == 'pose+DCT'):
-            feat1 = dct1[dist_feat1, len1]
-        elif (feat_type == 'pose+DFT'):
-            feat1 = fft[0:dist_feat1]
-            feat1 = feat1[0:len1,:]
+        feat1 = dct1[dist_feat1, len1]
         feat2 = np.block([[feat2],[abs(feat1)])
     feats[:, i] = feat2.flatten()
