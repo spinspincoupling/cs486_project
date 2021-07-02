@@ -4,14 +4,16 @@ import os
 import parameters
 import numpy as np
 import scipy.io
-
+from numpy import save
+import torchvision.transforms as transforms
+from PIL import Image
+import tensorflow as tf
 def generateVideoNames():
     videoNames = []
     for i in range(1,371):
         videoName = (3-len(str(i))) *"0"+str(i)+".avi"
         videoNames.append(videoName)
     return videoNames
-
 def loadMatFiles():
     '''
     :return:
@@ -27,93 +29,58 @@ def loadMatFiles():
     return trainingIndexs, testingIndexs, difficultyLevels, overallScores
 
 
-def loadSingleVideo(path, fileName, outPath):
-    # make sure that the fileName can be found under the "path" variable
-    # the function will create a folder with name "fileName" under the "outPath" directory and put all the images
-    # under this directory. The images are all the frames of the video
-    outDir = outPath + fileName[:-4]+"/"
-    if not os.path.isdir(outDir):
-        os.mkdir(outDir)
-        cap = cv2.VideoCapture(os.path.join(path, fileName))
-        i = 0
+def loadTrainTestData():
+    '''
+        data has shape (370, 103, 240, 320, 3)
+        370 video data
+        103 frames per video
+        image 240 * 320 * 3
+        data: (370, 103, 240, 320, 3)
+        trainingIndexs: (300,)
+        testingIndes: (70,)
+        difficultyLevels: (370, 1)
+        overallScores: (370, 1)
+        :return:
+        '''
+    trainingIndexs, testingIndexs, difficultyLevels, overallScores = loadMatFiles()
+    videoNames = generateVideoNames()
+    data = []
+    preprocess = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    for videoName in videoNames:
+        print("Processing",videoName)
+        imgs = []
+        cap = cv2.VideoCapture(os.path.join(parameters.pathOfVideoFiles, videoName))
         while (cap.isOpened()):
             ret, frame = cap.read()
             if ret == False:
                 break
-            cv2.imwrite(outDir+ str(i) + '.jpg', frame)
-            i += 1
+            frame = Image.fromarray(frame)
+            frame = preprocess(frame)
+            temp = tf.keras.preprocessing.image.img_to_array(frame)
+            imgs.append(temp)
+        data.append(imgs)
+    print("Done with all videos, converting to numpy array")
+    data = np.asarray(data)
+    data = data.reshape(data.shape[0],3, data.shape[1],data.shape[2],data.shape[3])
 
-        cap.release()
-        cv2.destroyAllWindows()
-
-def processImagesForOneVideo(imageFolder):
-    res = []
-    for i in range(103):
-        imagePath = imageFolder+str(i)+".jpg"
-        image = cv2.imread(imagePath)
-        # image = cv2.resize(image, (224, 224))
-        res.append(image)
-
-    train_x = np.asarray(res)
-    return train_x
-
-def convertVideosToNPArrays(pathOfVideoFiles, videoFileNames, outPathOfJPG):
-    '''
-    For example, pathOfVideoFile is in "/Users/bzjesus/Documents/CS486/diving", under
-    this folder, there are 370 videos
-    videoFileNames are defined the parameters, start from "001.avi" to "370.avi"
-    outPathOfJPG is "./pics/"
-
-    the function will call loadSingleVideo function and extract 103 frames(JPG files) for each video
-    and store the JPG files for each video under the corresponding folder
-    For example, the file directory will be /pics/001/0.jpg
-                                                     /1.jpg
-                                                     /2.jpg...
-                                            /pics/002/0.jpg
-                                                     /1.jpg
-                                                     /2.jpg...
-    :param pathOfVideoFile: the path of the video
-    :param videoFileNames:
-    :param outPathOfJPG:
-    :return:
-    '''
-    pathsOfJPGs = []
-    for folderName in videoFileNames:
-        pathsOfJPGs.append(outPathOfJPG+str(folderName[:-4])+"/")
-        loadSingleVideo(pathOfVideoFiles, folderName, outPathOfJPG)
-    print("Finished splitting 370 videos to images\n")
-    numpyImages = []
-    count = 1
-    for imageFolder in pathsOfJPGs:
-        numpyImages.append(processImagesForOneVideo(imageFolder))
-        count+=1
-        if count%100==0:
-            print("Finished loading ",count," images",sep="",end="\n")
-    print("Finished loading all the images, now we dump that into numpy array")
-    numpyImages = np.asarray(numpyImages)
-    print("Finished getting all of the data: ", numpyImages.shape,sep="")
-    return numpyImages
-
-def loadTrainTestData():
-    '''
-    data has shape (370, 103, 240, 320, 3)
-    370 video data
-    103 frames per video
-    image 240 * 320 * 3
-    data: (370, 103, 240, 320, 3)
-    trainingIndexs: (300,)
-    testingIndes: (70,)
-    difficultyLevels: (370, 1)
-    overallScores: (370, 1)
-    :return:
-    '''
-    trainingIndexs, testingIndexs, difficultyLevels, overallScores = loadMatFiles()
-    if not os.path.isdir("./pics/"):
-        os.mkdir("./pics/")
-    data = convertVideosToNPArrays(parameters.pathOfVideoFiles, generateVideoNames(), "./pics/")
+    data = preprocess(data)
+    print("Loading up training and testing")
     trainingData = data[trainingIndexs][0]
+    save("train.npy",trainingData)
     testingData = data[testingIndexs][0]
-    return trainingData, testingData, difficultyLevels, overallScores
+    save("test.npy",testingData)
+    print("Returning from loadTrainTestData")
+
+    print("trainingData:", trainingData.shape)
+    print("testingData:", testingData.shape)
+    print("difficultyLevels:", difficultyLevels.shape)
+    print("overallScores:", overallScores.shape)
+
 
 
 

@@ -12,10 +12,7 @@ def train():
 
 def main():
     trainingData, testingData, difficultyLevels, overallScores = preprocess.loadTrainTestData()
-    print("trainingData:", trainingData.shape)
-    print("testingData:", testingData.shape)
-    print("difficultyLevels:", difficultyLevels.shape)
-    print("overallScores:", overallScores.shape)
+
     train()
 
 
