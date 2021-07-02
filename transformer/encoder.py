@@ -55,7 +55,7 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer(BasicBlock, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(BasicBlock, 512, layers[3], stride=2)
 
-        self.avgpool = nn.AvgPool2d(parameters.d_embedding)
+        self.avgpool = nn.AvgPool2d((8, 10))
 
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None
@@ -86,9 +86,10 @@ class ResNet(nn.Module):
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
+        # at this point size of x is [512, 8, 10]
 
         x = self.avgpool(x)
-        # x = torch.flatten(x, 1)
+        x = torch.flatten(x, 1)
 
         return x
 
