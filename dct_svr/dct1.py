@@ -3,6 +3,7 @@ from numpy import *
 
 # useful link: https://numpy.org/doc/stable/user/numpy-for-matlab-users.html
 
+# x is a numpy matrix, k_max is a positive integer
 def dct1(x, k_max=infty):
 
     N = x.shape[0]
