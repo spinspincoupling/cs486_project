@@ -19,5 +19,5 @@ IN_WIDTH = 320
 IN_CHANNEL = 3
 
 pathOfVideoFiles = "/Users/bzjesus/Documents/CS486/diving"
-processedTrainingPath = 'data/training.npy'
-processedTestingPath = 'data/testing.npy'
+processedTrainingPath = 'data/trainingData.npy'
+processedTestingPath = 'data/testingData.npy'

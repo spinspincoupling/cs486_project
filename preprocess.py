@@ -153,8 +153,8 @@ def loadTrainTestData():
             imgs.append(processed.numpy())
         test.append(imgs)
     print("Done with all videos, converting to tensors")
-    trainingData = torch.from_numpy(np.moveaxis(np.asarray(trainingData), -1, 2))
-    testingData = torch.from_numpy(np.moveaxis(np.asarray(testingData), -1, 2))
+    trainingData = torch.from_numpy(np.moveaxis(np.asarray(train), -1, 2))
+    testingData = torch.from_numpy(np.moveaxis(np.asarray(test), -1, 2))
     return trainingData, testingData, difficultyLevels, overallScores
 
 
