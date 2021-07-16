@@ -22,5 +22,6 @@ class VTN(nn.Module):
         output = self.decoder(output)
         output = torch.mean(output, 1)
         output = output.squeeze(0)
+        print("In VTN:",difficulty_levels.shape)
         output = self.fc(torch.cat((output, difficulty_levels), 0))
         return output
