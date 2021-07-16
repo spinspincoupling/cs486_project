@@ -16,8 +16,9 @@ from cs486_project.transformer.VTN import VTN
 
 def transformBatch(batch):
     transformations = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
+        # transforms.Resize(256),
+        transforms.CenterCrop(240),
+        transforms.Resize(224),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
@@ -49,17 +50,17 @@ def train(vtn, trainingData, difficultyLevels, overallScores):
 
             mini_train = trainingData[5*miniBatchStart:5*miniBatchStart+5]
             print("mini_train.shape:",mini_train.shape)
-            loss = 0
             for batch in mini_train:
                 start = time.time()
                 batch = transformBatch(batch)
                 print("After transformation in train, we have the batch type:", batch.type)
                 start = time.time()
-                optimizer.zero_grad()
+                vtn.zero_grad()
                 print("Batch Size:", batch.shape)
                 output = vtn(batch, difficultyLevels[idx])
-                loss += criterion(output, overallScores[idx])
+                loss = criterion(output, overallScores[idx])
                 loss.backward()
+                optimizer.step()
                 end = time.time()
                 print("finish training batch " + str(idx) + " takes: " + str(end - start))
                 idx += 1
