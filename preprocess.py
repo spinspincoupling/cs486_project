@@ -24,8 +24,8 @@ def loadMatFiles():
     '''
     trainingIndexs = scipy.io.loadmat("./data/split_300_70/training_idx.mat")['training_idx']-1
     testingIndexs = scipy.io.loadmat("./data/split_300_70/testing_idx.mat")['testing_idx']-1
-    difficultyLevels = torch.from_numpy(scipy.io.loadmat("./data/diving_difficulty_level.mat")['difficulty_level'])
-    overallScores = torch.from_numpy(scipy.io.loadmat("./data/diving_overall_scores.mat")['overall_scores'])
+    difficultyLevels = scipy.io.loadmat("./data/diving_difficulty_level.mat")['difficulty_level'].reshape(-1)
+    overallScores = scipy.io.loadmat("./data/diving_overall_scores.mat")['overall_scores'].reshape(-1)
 
     return trainingIndexs, testingIndexs, difficultyLevels, overallScores
 
@@ -75,7 +75,7 @@ def processTrainTestData():
 
     testingData = np.asarray(testingData)
 
-    return trainingData, testingData, difficultyLevels, overallScores
+    return trainingData, testingData, difficultyLevels, overallScores, trainingIndexs, testingIndexs
 
 
 def loadTrainTestData():
@@ -87,13 +87,15 @@ def loadTrainTestData():
         _, _, difficultyLevels, overallScores = loadMatFiles()
         trainingData = np.load(parameters.processedTrainingPath).astype("uint8")
         testingData = np.load(parameters.processedTestingPath).astype("uint8")
+        trainingIndices = scipy.io.loadmat("./data/split_300_70/training_idx.mat")['training_idx'][0] - 1
+        testingIndices = scipy.io.loadmat("./data/split_300_70/testing_idx.mat")['testing_idx'][0] - 1
         print("Second Run")
         print("trainingData:", trainingData.shape)
         print("testingData:", testingData.shape)
         print("difficultyLevels:", difficultyLevels.shape)
         print("overallScores:", overallScores.shape)
     else:
-        trainingData, testingData, difficultyLevels, overallScores = processTrainTestData()
+        trainingData, testingData, difficultyLevels, overallScores, trainingIndices, testingIndices = processTrainTestData()
         # after first run above, save for future uses, DO NOT check in the .npy file, they are too large
         print("First Run")
         print("trainingData:", trainingData.shape)
@@ -105,7 +107,10 @@ def loadTrainTestData():
         print("Finished saving training data , now we are saving testing data")
         np.save("data/testingData.npy", testingData)
         print("Finished saving testing")
-
+    trainingDifficultyLevels = difficultyLevels[trainingIndices]
+    trainingOverallScores = overallScores[trainingIndices]
+    testingDifficultyLevels = difficultyLevels[testingIndices]
+    testingOverallScores = overallScores[testingIndices]
     # test = trainingData[0][0].astype(np.uint8)
     # temp = Image.fromarray(test)
     #
@@ -152,6 +157,8 @@ def loadTrainTestData():
     # print("Done with all videos, converting to tensors")
     # trainingData = torch.from_numpy(np.moveaxis(np.asarray(train), -1, 2))
     # testingData = torch.from_numpy(np.moveaxis(np.asarray(test), -1, 2))
-    return trainingData, testingData, difficultyLevels, overallScores
+
+
+    return trainingData, testingData, trainingDifficultyLevels, trainingOverallScores, testingDifficultyLevels, testingOverallScores
 
 

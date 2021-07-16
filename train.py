@@ -34,6 +34,7 @@ def transformBatch(batch):
 
 def train(vtn, trainingData, difficultyLevels, overallScores):
     trainingError = []
+
     print("trainingData:", trainingData.shape)
 
     optimizer = torch.optim.Adam(vtn.parameters())
@@ -45,11 +46,12 @@ def train(vtn, trainingData, difficultyLevels, overallScores):
         ### Training Model
         for miniBatchStart in range(int(trainingData.shape[0]/parameters.TOTAL_EPOCHS)):
             print("MiniBatchStart:",miniBatchStart,"==========================")
-            start = time.time()
+
             mini_train = trainingData[5*miniBatchStart:5*miniBatchStart+5]
             print("mini_train.shape:",mini_train.shape)
             loss = 0
             for batch in mini_train:
+                start = time.time()
                 batch = transformBatch(batch)
                 print("After transformation in train, we have the batch type:", batch.type)
                 start = time.time()
@@ -68,19 +70,51 @@ def train(vtn, trainingData, difficultyLevels, overallScores):
         trainingError.append(epochTrainErrorAvg)
     return vtn, trainingError
 
+def test(vtn, testingData, difficultyLevels, overallScores):
+    testError = []
+    optimizer = torch.optim.Adam(vtn.parameters())
+    criterion = nn.SmoothL1Loss()
+    idx = 0
+
+    for batch in testingData:
+        start = time.time()
+        loss = 0
+        batch = transformBatch(batch)
+        optimizer.zero_grad()
+        print("Batch Size:", batch.shape)
+        output = vtn(batch, difficultyLevels[idx])
+        loss += criterion(output, overallScores[idx])
+        loss.backward()
+        end = time.time()
+        print("finish training batch " + str(idx) + " takes: " + str(end - start))
+        idx += 1
+        testError.append(loss)
+    testErrorAvg = sum(testError)/len(testError)
+    print("Testing Error over ",testingData.shape[0]," is:",testErrorAvg)
+    return vtn, testError
+
+
+
+
+
+
+
 def main():
-    trainingData, testingData, difficultyLevels, overallScores = preprocess.loadTrainTestData()
+    trainingData, testingData, trainingDifficultyLevels, trainingOverallScores, testingDifficultyLevels, testingOverallScores = preprocess.loadTrainTestData()
     print("In main")
     print("trainingData:", trainingData.shape)
     print("testingData:", testingData.shape)
-    print("difficultyLevels:", difficultyLevels.shape)
-    print("overallScores:", overallScores.shape)
+    print("trainingDifficultyLevels:", trainingDifficultyLevels.shape)
+    print("trainingOverallScores:", trainingOverallScores.shape)
+    print("testingDifficultyLevels:", testingDifficultyLevels.shape)
+    print("testingOverallScores:", testingOverallScores.shape)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     vtn = VTN().to(device)
 
-    train(vtn, trainingData, difficultyLevels, overallScores)
+    train(vtn, trainingData, trainingDifficultyLevels, trainingOverallScores)
+    test(vtn, testingData, testingDifficultyLevels, testingOverallScores)
 
 
 if __name__ == '__main__':
