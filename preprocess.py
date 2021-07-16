@@ -1,12 +1,9 @@
-
-
 # data loader
 import cv2
 import os
 import parameters
 import scipy.io
-import torchvision.transforms as transforms
-from PIL import Image
+
 import PIL
 import torch
 import numpy as np
@@ -109,52 +106,52 @@ def loadTrainTestData():
         np.save("data/testingData.npy", testingData)
         print("Finished saving testing")
 
-    test = trainingData[0][0].astype(np.uint8)
-    temp = Image.fromarray(test)
-
-    transformations = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
-    processed = transformations(temp)
-    train = []
-    test = []
-
-
-    for i in range(len(trainingData)):
-        imgs = []
-        for j in range(len(trainingData[i])):
-            img = Image.fromarray(trainingData[i][j])
-            transformations = transforms.Compose([
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ])
-            processed = transformations(img)
-            imgs.append(processed.numpy())
-        train.append(imgs)
-    print("Finished processing training images")
-
-
-    for i in range(len(testingData)):
-        imgs = []
-        for j in range(len(testingData[i])):
-            img = Image.fromarray(testingData[i][j])
-            transformations = transforms.Compose([
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ])
-            processed = transformations(img)
-            imgs.append(processed.numpy())
-        test.append(imgs)
-    print("Done with all videos, converting to tensors")
-    trainingData = torch.from_numpy(np.moveaxis(np.asarray(train), -1, 2))
-    testingData = torch.from_numpy(np.moveaxis(np.asarray(test), -1, 2))
+    # test = trainingData[0][0].astype(np.uint8)
+    # temp = Image.fromarray(test)
+    #
+    # transformations = transforms.Compose([
+    #     transforms.Resize(256),
+    #     transforms.CenterCrop(224),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    # ])
+    # processed = transformations(temp)
+    # train = []
+    # test = []
+    #
+    #
+    # for i in range(len(trainingData)):
+    #     imgs = []
+    #     for j in range(len(trainingData[i])):
+    #         img = Image.fromarray(trainingData[i][j])
+    #         transformations = transforms.Compose([
+    #             transforms.Resize(256),
+    #             transforms.CenterCrop(224),
+    #             transforms.ToTensor(),
+    #             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    #         ])
+    #         processed = transformations(img)
+    #         imgs.append(processed.numpy())
+    #     train.append(imgs)
+    # print("Finished processing training images")
+    #
+    #
+    # for i in range(len(testingData)):
+    #     imgs = []
+    #     for j in range(len(testingData[i])):
+    #         img = Image.fromarray(testingData[i][j])
+    #         transformations = transforms.Compose([
+    #             transforms.Resize(256),
+    #             transforms.CenterCrop(224),
+    #             transforms.ToTensor(),
+    #             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    #         ])
+    #         processed = transformations(img)
+    #         imgs.append(processed.numpy())
+    #     test.append(imgs)
+    # print("Done with all videos, converting to tensors")
+    # trainingData = torch.from_numpy(np.moveaxis(np.asarray(train), -1, 2))
+    # testingData = torch.from_numpy(np.moveaxis(np.asarray(test), -1, 2))
     return trainingData, testingData, difficultyLevels, overallScores
 
 

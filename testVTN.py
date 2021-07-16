@@ -9,11 +9,11 @@ from transformer.VTN import *
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 if __name__ == '__main__':
-    trainingData = np.load('../data/trainingData.npy')
-    testingData = np.load('../data/testingData.npy')
+    trainingData = np.load('./data/trainingData.npy')
+    testingData = np.load('./data/testingData.npy')
     # _, _, difficultyLevels, overallScores = preprocess.loadMatFiles()
-    difficultyLevels = scipy.io.loadmat("../data/diving_difficulty_level.mat")['difficulty_level']
-    overallScores = scipy.io.loadmat("../data/diving_overall_scores.mat")['overall_scores']
+    difficultyLevels = scipy.io.loadmat("./data/diving_difficulty_level.mat")['difficulty_level']
+    overallScores = scipy.io.loadmat("./data/diving_overall_scores.mat")['overall_scores']
     # preprocess = transforms.Compose([
     #     transforms.CenterCrop(240),
     #     transforms.ToTensor(),
@@ -36,6 +36,7 @@ if __name__ == '__main__':
         start = time.time()
         optimizer.zero_grad()
         loss = 0
+        print("Batch Size:", batch.shape)
         output = vtn(batch, difficultyLevels[idx])
         loss += criterion(output, overallScores[idx])
         loss.backward()
