@@ -24,8 +24,8 @@ def loadMatFiles():
     '''
     trainingIndexs = scipy.io.loadmat("./data/split_300_70/training_idx.mat")['training_idx']-1
     testingIndexs = scipy.io.loadmat("./data/split_300_70/testing_idx.mat")['testing_idx']-1
-    difficultyLevels = torch.from_numpy(scipy.io.loadmat("./data/diving_difficulty_level.mat")['difficulty_level'])
-    overallScores = torch.from_numpy(scipy.io.loadmat("./data/diving_overall_scores.mat")['overall_scores'])
+    difficultyLevels = torch.from_numpy((scipy.io.loadmat("./data/diving_difficulty_level.mat")['difficulty_level']).astype(np.float32))
+    overallScores = torch.from_numpy(scipy.io.loadmat("./data/diving_overall_scores.mat")['overall_scores'].astype(np.float32))
 
     return trainingIndexs, testingIndexs, difficultyLevels, overallScores
 
