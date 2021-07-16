@@ -35,9 +35,11 @@ def transformBatch(batch):
 
 def train(vtn, trainingData, difficultyLevels, overallScores):
     trainingError = []
-
-    print("trainingData:", trainingData.shape)
-
+    print()
+    print("Training:")
+    print("trainingData:", type(trainingData),trainingData.shape)
+    print("Difficulty Levels:", type(difficultyLevels), difficultyLevels.shape)
+    print("OverallScores:", type(overallScores), overallScores.shape)
     optimizer = torch.optim.Adam(vtn.parameters())
     criterion = nn.SmoothL1Loss()
 
@@ -51,7 +53,6 @@ def train(vtn, trainingData, difficultyLevels, overallScores):
             mini_train = trainingData[5*miniBatchStart:5*miniBatchStart+5]
             print("mini_train.shape:",mini_train.shape)
             for batch in mini_train:
-                start = time.time()
                 batch = transformBatch(batch)
                 print("After transformation in train, we have the batch type:", batch.type)
                 start = time.time()
