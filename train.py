@@ -33,11 +33,10 @@ def transformBatch(batch):
     return res
 
 
-def train(vtn, trainingData, difficultyLevels, overallScores):
+def trainOnData(vtn, trainingData, difficultyLevels, overallScores):
     trainingError = []
     print()
-    print("Training:")
-    print("trainingData:", type(trainingData),trainingData.shape)
+    print("Data:", type(trainingData),trainingData.shape)
     print("Difficulty Levels:", type(difficultyLevels), difficultyLevels.shape)
     print("OverallScores:", type(overallScores), overallScores.shape)
     optimizer = torch.optim.Adam(vtn.parameters())
@@ -53,18 +52,16 @@ def train(vtn, trainingData, difficultyLevels, overallScores):
             mini_train = trainingData[5*miniBatchStart:5*miniBatchStart+5]
             print("mini_train.shape:",mini_train.shape)
             for batch in mini_train:
-                batch = transformBatch(batch)
-                print("After transformation in train, we have the batch type:", batch.shape)
                 start = time.time()
+                batch = transformBatch(batch)
+
                 vtn.zero_grad()
-                print("Batch Size:", batch.shape)
-                print(difficultyLevels[idx])
-                output = vtn(batch, difficultyLevels[idx])
-                loss = criterion(output, overallScores[idx])
+                output = vtn(batch, torch.unsqueeze(difficultyLevels[idx],0))
+                loss = criterion(output, torch.unsqueeze(overallScores[idx],0))
                 loss.backward()
                 optimizer.step()
                 end = time.time()
-                print("finish training batch " + str(idx) + " takes: " + str(end - start))
+                print("Finish training batch " + str(idx) + " takes: " + str(end - start))
                 idx += 1
             loss/= mini_train.shape[0]
             epochTrainError.append(loss)
@@ -83,8 +80,8 @@ def test(vtn, testingData, difficultyLevels, overallScores):
         loss = 0
         batch = transformBatch(batch)
         print("Batch Size:", batch.shape)
-        output = vtn(batch, difficultyLevels[idx])
-        loss += criterion(output, overallScores[idx])
+        output = vtn(batch, torch.unsqueeze(difficultyLevels[idx],0))
+        loss += criterion(output, torch.unsqueeze(overallScores[idx],0))
         end = time.time()
         print("finish training batch " + str(idx) + " takes: " + str(end - start))
         idx += 1
@@ -113,7 +110,7 @@ def main():
 
     vtn = VTN().to(device)
 
-    train(vtn, trainingData, trainingDifficultyLevels, trainingOverallScores)
+    trainOnData(vtn, trainingData, trainingDifficultyLevels, trainingOverallScores)
     test(vtn, testingData, testingDifficultyLevels, testingOverallScores)
 
 
