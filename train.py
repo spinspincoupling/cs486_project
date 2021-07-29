@@ -98,7 +98,7 @@ def main():
     vtn = VTN().to(device)
 
     for i in range(60):
-        trainingData, trainingDifficultyLevels, trainingOverallScores = preprocess.loadTrainData(i,i+5)
+        trainingData, trainingDifficultyLevels, trainingOverallScores = preprocess.loadTrainData(5*i,5*i+5)
         print("In main")
         print("trainingData:", trainingData.shape)
         print("trainingDifficultyLevels:", trainingDifficultyLevels.shape)
@@ -110,7 +110,7 @@ def main():
         print("testingData:", trainingData.shape)
         print("testingDifficultyLevels:", trainingDifficultyLevels.shape)
         print("testingOverallScores:", trainingOverallScores.shape)
-        testingData, testingDifficultyLevels, testingOverallScores = preprocess.loadTestData(i,i+5)
+        testingData, testingDifficultyLevels, testingOverallScores = preprocess.loadTestData(5*i,5*i+5)
         test(vtn, testingData, testingDifficultyLevels, testingOverallScores)
 if __name__ == '__main__':
 
