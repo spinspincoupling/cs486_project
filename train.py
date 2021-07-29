@@ -77,39 +77,43 @@ def trainOnData(vtn, optimizer, trainingData, difficultyLevels, overallScores):
 
 def test(vtn, testingData, difficultyLevels, overallScores):
     testError = []
+    outputs = []
     criterion = nn.SmoothL1Loss()
     idx = 0
 
     for batch in testingData:
-        start = time.time()
         loss = 0
         batch = transformBatch(batch)
         batch = batch.to(device)
         output = vtn(batch, torch.unsqueeze(difficultyLevels[idx], 0))
         loss += criterion(output, torch.unsqueeze(overallScores[idx], 0))
-        end = time.time()
-        print("finish running " + str(idx) + " takes: " + str(end - start))
         idx += 1
+        outputs.append(output.item())
         testError.append(loss.item())
     testErrorAvg = sum(testError) / len(testError)
     print("Testing Error:", testErrorAvg)
-    return output, testError
+    return outputs, testError
 
 
 def evaluate(path):
     print("Start testing model " + "...")
     testErrors = []
+    outputs = []
     # code to load the frozen model
     net = VTN().to(device)
     net.load_state_dict(torch.load(path))
+    start = time.time()
     for i in range(14):
         testingData, testingDifficultyLevels, testingOverallScores = preprocess.loadTestData(5 * i, 5 * i + 5)
         testingDifficultyLevels, testingOverallScores = testingDifficultyLevels.to(
             device), testingOverallScores.to(device)
-        _, testError = test(net, testingData, testingDifficultyLevels, testingOverallScores)
+        output, testError = test(net, testingData, testingDifficultyLevels, testingOverallScores)
         testErrors += testError
+        outputs += output
         testErrorAvg = sum(testErrors) / len(testErrors)
         print("Average validation error:", testErrorAvg)
+    end = time.time()
+    print("finish running test data takes: " + str(end - start))
 
 
 def main():
