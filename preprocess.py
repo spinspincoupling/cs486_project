@@ -36,7 +36,7 @@ def shape(a):
     return (type(a),type(a[0]),type(a[0][0]),len(a),len(a[0]), a[0][0].shape)
 
 def processTrainData(trainIndexs):
-    print(PIL.__version__)
+    # print(PIL.__version__)
     videoNames = generateVideoNames()
     trainingData = []
 
@@ -71,12 +71,12 @@ def processTestData(testIndexs):
             frame = frame.astype("uint8")
             imgs.append(frame)
         testingData.append(imgs)
-    print("Done with all videos, converting to numpy array")
+    # print("Done with all videos, converting to numpy array")
     testingData = np.asarray(testingData)
     return testingData
 
 def loadTrainData(trainStart, trainEnd):
-    print(PIL.__version__)
+    # print(PIL.__version__)
 
     difficultyLevels = scipy.io.loadmat("./data/diving_difficulty_level.mat")['difficulty_level'].reshape(-1).astype(
         np.float32)
@@ -90,10 +90,10 @@ def loadTrainData(trainStart, trainEnd):
     trainingOverallScores = overallScores[trainingIndexs]
 
     trainingData = processTrainData(trainingIndexs)
-    print("In loadTrainData")
-    print("trainingData:", trainingData.shape)
-    print("difficultyLevels:", trainingDifficultyLevels.shape)
-    print("overallScores:", trainingOverallScores.shape)
+    # print("In loadTrainData")
+    # print("trainingData:", trainingData.shape)
+    # print("difficultyLevels:", trainingDifficultyLevels.shape)
+    # print("overallScores:", trainingOverallScores.shape)
     return trainingData, torch.from_numpy(trainingDifficultyLevels),\
         torch.from_numpy(trainingOverallScores)
 
@@ -110,9 +110,9 @@ def loadTestData(testStart, testEnd):
     testingOverallScores = overallScores[testingIndexs]
 
     testingData = processTestData(testingIndexs)
-    print("In loadTestData")
-    print("testingData:", testingData.shape)
-    print("difficultyLevels:", testingDifficultyLevels.shape)
-    print("overallScores:", testingOverallScores.shape)
+    # print("In loadTestData")
+    # print("testingData:", testingData.shape)
+    # print("difficultyLevels:", testingDifficultyLevels.shape)
+    # print("overallScores:", testingOverallScores.shape)
     return testingData, torch.from_numpy(testingDifficultyLevels), \
            torch.from_numpy(testingOverallScores)

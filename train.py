@@ -98,6 +98,8 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     vtn = VTN().to(device)
     optimizer = torch.optim.Adam(vtn.parameters(), lr=parameters.LEARNING_RATE)
+    best = 500
+    bestEpoch = 500
 
     for epoch in range(parameters.TOTAL_EPOCHS):
         print("Training epoch ", epoch)
@@ -109,10 +111,13 @@ def main():
             # print("trainingOverallScores:", trainingOverallScores.size())
             vtn, loss = trainOnData(vtn, optimizer, trainingData, trainingDifficultyLevels, trainingOverallScores)
             epochTrainError.append(loss)
-    epochTrainErrorAvg = sum(epochTrainError) / len(epochTrainError)
-    print("Epoch ", epoch, " Training Error:", epochTrainErrorAvg, sep=" ")
-
-    torch.save(vtn.state_dict(), parameters.MODEL_PATH)
+            if loss < best:
+                best = loss
+                if best < 10:
+                    torch.save(vtn.state_dict(), parameters.MODEL_PATH)
+        epochTrainErrorAvg = sum(epochTrainError) / len(epochTrainError)
+        torch.save(vtn.state_dict(), "./frozen_model" + str(epoch) + ".pth")
+        print("Epoch ", epoch, " Training Error:", epochTrainErrorAvg, sep=" ")
 
     # code to load the frozen model
     # net = VTN()
