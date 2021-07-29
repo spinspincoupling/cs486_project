@@ -58,7 +58,7 @@ def trainOnData(vtn, optimizer, trainingData, difficultyLevels, overallScores):
         batch = transformBatch(batch)
 
         vtn.zero_grad()
-        batch = torch.from_numpy(batch).to(device)
+        batch = batch.to(device)
         output = vtn(batch, torch.unsqueeze(difficultyLevels[idx], 0))
         loss = criterion(output, torch.unsqueeze(overallScores[idx], 0))
         loss.backward()
