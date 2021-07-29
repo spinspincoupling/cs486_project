@@ -13,6 +13,7 @@ import torch
 from torch import nn
 
 from cs486_project.transformer.VTN import VTN
+# from transformer.VTN import VTN
 
 def transformBatch(batch):
     transformations = transforms.Compose([
@@ -23,7 +24,6 @@ def transformBatch(batch):
     ])
     res = torch.zeros((103,3,224,224))
     indx = 0
-    print(batch.shape)
     for data in batch:
         img = Image.fromarray(data)
         res[indx] = transformations(img)
@@ -32,42 +32,44 @@ def transformBatch(batch):
     return res
 
 
-def trainOnData(vtn, trainingData, difficultyLevels, overallScores):
-    trainingError = []
-    print()
+criterion = nn.SmoothL1Loss()
+
+
+def trainOnData(vtn,optimizer, trainingData, difficultyLevels, overallScores):
+    # trainingError = []
+    # print()
     print("Data:", type(trainingData),trainingData.shape)
     print("Difficulty Levels:", type(difficultyLevels), difficultyLevels.shape)
     print("OverallScores:", type(overallScores), overallScores.shape)
-    optimizer = torch.optim.Adam(vtn.parameters())
-    criterion = nn.SmoothL1Loss()
 
-    for epoch in range(parameters.TOTAL_EPOCHS):
-        epochTrainError = []
-        idx = 0
-        ### Training Model
-        for miniBatchStart in range(int(trainingData.shape[0]/parameters.TOTAL_EPOCHS)):
-            print("MiniBatchStart:",miniBatchStart,"==========================")
+    # epochTrainError = []
+    idx = 0
+    ### Training Model
+    # for miniBatchStart in range(int(trainingData.shape[0]/parameters.TOTAL_EPOCHS)):
+    #     print("MiniBatchStart:",miniBatchStart,"==========================")
+    #
+    #     mini_train = trainingData[5*miniBatchStart:5*miniBatchStart+5]
+    # print("mini_train.shape:", trainingData.shape)
+    trainLoss = 0
+    for batch in trainingData:
+        start = time.time()
+        batch = transformBatch(batch)
 
-            mini_train = trainingData[5*miniBatchStart:5*miniBatchStart+5]
-            print("mini_train.shape:",mini_train.shape)
-            for batch in mini_train:
-                start = time.time()
-                batch = transformBatch(batch)
-
-                vtn.zero_grad()
-                output = vtn(batch, torch.unsqueeze(difficultyLevels[idx],0))
-                loss = criterion(output, torch.unsqueeze(overallScores[idx],0))
-                loss.backward()
-                optimizer.step()
-                end = time.time()
-                print("Finish training batch " + str(idx) + " takes: " + str(end - start))
-                idx += 1
-            loss/= mini_train.shape[0]
-            epochTrainError.append(loss)
-        epochTrainErrorAvg = sum(epochTrainError)/len(epochTrainError)
-        print("Epoch ",epoch," Training Error:", epochTrainErrorAvg, sep=" ")
-        trainingError.append(epochTrainErrorAvg)
-    return vtn, trainingError
+        vtn.zero_grad()
+        output = vtn(batch, torch.unsqueeze(difficultyLevels[idx],0))
+        loss = criterion(output, torch.unsqueeze(overallScores[idx],0))
+        loss.backward()
+        optimizer.step()
+        end = time.time()
+        print("Finish training batch " + str(idx) + " takes: " + str(end - start))
+        idx += 1
+        trainLoss += loss
+    trainLoss /= trainingData.shape[0]
+    # epochTrainErrorAvg = sum(epochTrainError)/len(epochTrainError)
+    # print("Epoch ",epoch," Training Error:", epochTrainErrorAvg, sep=" ")
+    print("Training Error:", trainLoss, sep=" ")
+    # trainingError.append(epochTrainErrorAvg)
+    return vtn, trainLoss
 
 def test(vtn, testingData, difficultyLevels, overallScores):
     testError = []
@@ -96,14 +98,20 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     vtn = VTN().to(device)
+    optimizer = torch.optim.Adam(vtn.parameters())
 
-    for i in range(60):
-        trainingData, trainingDifficultyLevels, trainingOverallScores = preprocess.loadTrainData(5*i,5*i+5)
-        print("In main")
-        print("trainingData:", trainingData.shape)
-        print("trainingDifficultyLevels:", trainingDifficultyLevels.shape)
-        print("trainingOverallScores:", trainingOverallScores.shape)
-        trainOnData(vtn, trainingData, trainingDifficultyLevels, trainingOverallScores)
+    for epoch in range(parameters.TOTAL_EPOCHS):
+        epochTrainError = []
+        for i in range(60):
+            trainingData, trainingDifficultyLevels, trainingOverallScores = preprocess.loadTrainData(i, i + 5)
+            print("In main")
+            print("trainingData:", trainingData.shape)
+            print("trainingDifficultyLevels:", trainingDifficultyLevels.size())
+            print("trainingOverallScores:", trainingOverallScores.size())
+            loss = trainOnData(vtn, optimizer,  trainingData, trainingDifficultyLevels, trainingOverallScores)
+            epochTrainError.append(loss)
+    epochTrainErrorAvg = sum(epochTrainError)/len(epochTrainError)
+    print("Epoch ",epoch," Training Error:", epochTrainErrorAvg, sep=" ")
 
     for i in range(14):
         print("In main")
@@ -113,7 +121,6 @@ def main():
         testingData, testingDifficultyLevels, testingOverallScores = preprocess.loadTestData(5*i,5*i+5)
         test(vtn, testingData, testingDifficultyLevels, testingOverallScores)
 if __name__ == '__main__':
-
     main()
 
 
