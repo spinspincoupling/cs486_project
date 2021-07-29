@@ -84,7 +84,7 @@ def test(vtn, testingData, difficultyLevels, overallScores):
         start = time.time()
         loss = 0
         batch = transformBatch(batch)
-        # print("Batch Size:", batch.shape)
+        batch = batch.to(device)
         output = vtn(batch, torch.unsqueeze(difficultyLevels[idx], 0))
         loss += criterion(output, torch.unsqueeze(overallScores[idx], 0))
         end = time.time()
@@ -93,14 +93,29 @@ def test(vtn, testingData, difficultyLevels, overallScores):
         testError.append(loss.item())
     testErrorAvg = sum(testError) / len(testError)
     print("Testing Error over ", testingData.shape[0], " is:", testErrorAvg)
-    return vtn, testError
+    return output, testError
+
+
+def evaluate(path):
+    print("Start testing model " + "...")
+    # code to load the frozen model
+    net = VTN()
+    net.load_state_dict(torch.load(path))
+    for i in range(14):
+        # print("In main")
+        # print("testingData:", trainingData.shape)
+        # print("testingDifficultyLevels:", trainingDifficultyLevels.shape)
+        # print("testingOverallScores:", trainingOverallScores.shape)
+        testingData, testingDifficultyLevels, testingOverallScores = preprocess.loadTestData(5 * i, 5 * i + 5)
+        testingDifficultyLevels, testingOverallScores = testingDifficultyLevels.to(
+            device), testingOverallScores.to(device)
+        _, testError = test(net, testingData, testingDifficultyLevels, testingOverallScores)
 
 
 def main():
     vtn = VTN().to(device)
     optimizer = torch.optim.Adam(vtn.parameters(), lr=parameters.LEARNING_RATE)
     best = 500
-    bestEpoch = 500
 
     for epoch in range(parameters.TOTAL_EPOCHS):
         print("Training epoch ", epoch)
@@ -110,7 +125,8 @@ def main():
             # print("trainingData:", trainingData.shape)
             # print("trainingDifficultyLevels:", trainingDifficultyLevels.size())
             # print("trainingOverallScores:", trainingOverallScores.size())
-            trainingDifficultyLevels, trainingOverallScores = trainingDifficultyLevels.to(device), trainingOverallScores.to(device)
+            trainingDifficultyLevels, trainingOverallScores = trainingDifficultyLevels.to(
+                device), trainingOverallScores.to(device)
             vtn, loss = trainOnData(vtn, optimizer, trainingData, trainingDifficultyLevels, trainingOverallScores)
             epochTrainError.append(loss)
             if loss < best:
@@ -121,18 +137,13 @@ def main():
         torch.save(vtn.state_dict(), "./frozen_model" + str(epoch) + ".pth")
         print("Epoch ", epoch, " Training Error:", epochTrainErrorAvg, sep=" ")
 
-    # code to load the frozen model
-    # net = VTN()
-    # net.load_state_dict(torch.load(parameters.MODEL_PATH))
-
-    print("Start testing....");
     for i in range(14):
         # print("In main")
         # print("testingData:", trainingData.shape)
         # print("testingDifficultyLevels:", trainingDifficultyLevels.shape)
         # print("testingOverallScores:", trainingOverallScores.shape)
         testingData, testingDifficultyLevels, testingOverallScores = preprocess.loadTestData(5 * i, 5 * i + 5)
-        vtn, testError = test(vtn, testingData, testingDifficultyLevels, testingOverallScores)
+        output, testError = test(vtn, testingData, testingDifficultyLevels, testingOverallScores)
 
 
 if __name__ == '__main__':
