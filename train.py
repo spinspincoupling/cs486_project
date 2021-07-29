@@ -63,7 +63,7 @@ def trainOnData(vtn,optimizer, trainingData, difficultyLevels, overallScores):
         end = time.time()
         print("Finish training batch " + str(idx) + " takes: " + str(end - start))
         idx += 1
-        trainLoss += loss
+        trainLoss += loss.item()
     trainLoss /= trainingData.shape[0]
     # epochTrainErrorAvg = sum(epochTrainError)/len(epochTrainError)
     # print("Epoch ",epoch," Training Error:", epochTrainErrorAvg, sep=" ")
