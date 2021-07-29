@@ -34,134 +34,85 @@ def toTensor(img):
     return img.float().div(255).unsqueeze(0)
 def shape(a):
     return (type(a),type(a[0]),type(a[0][0]),len(a),len(a[0]), a[0][0].shape)
-def processTrainTestData():
-    '''
-        data has shape (370, 103, 240, 320, 3)
-        370 video data
-        103 frames per video
-        image 240 * 320 * 3
-        data: (370, 103, 240, 320, 3)
-        trainingIndexs: (300,)
-        testingIndes: (70,)
-        difficultyLevels: (370, 1)
-        overallScores: (370, 1)
-        :return:
-        '''
+
+def processTrainData(trainIndexs):
     print(PIL.__version__)
-    trainingIndexs, testingIndexs, difficultyLevels, overallScores = loadMatFiles()
     videoNames = generateVideoNames()
     trainingData = []
-    testingData = []
-    i = 0
-    for videoName in videoNames:
-        print("Processing",videoName)
+
+    for trainIndex in trainIndexs:
+        print("Processing",videoNames[trainIndex])
         imgs = []
-        cap = cv2.VideoCapture(os.path.join(parameters.pathOfVideoFiles, videoName))
+        path = os.path.join(parameters.pathOfVideoFiles, videoNames[trainIndex])
+        cap = cv2.VideoCapture(path)
         while (cap.isOpened()):
             ret, frame = cap.read()
             if ret == False:
                 break
             frame = frame.astype("uint8")
-
             imgs.append(frame)
-        if i in trainingIndexs:
-            trainingData.append(imgs)
-        else:
-            testingData.append(imgs)
-        i+=1
-
+        trainingData.append(imgs)
     print("Done with all videos, converting to numpy array")
     trainingData = np.asarray(trainingData)
+    return trainingData
 
+def processTestData(testIndexs):
+    videoNames = generateVideoNames()
+    testingData = []
+    for testIndex in testIndexs:
+        print("Processing",videoNames[testIndex])
+        imgs = []
+        path = os.path.join(parameters.pathOfVideoFiles, videoNames[testIndex])
+        cap = cv2.VideoCapture(path)
+        while (cap.isOpened()):
+            ret, frame = cap.read()
+            if ret == False:
+                break
+            frame = frame.astype("uint8")
+            imgs.append(frame)
+        testingData.append(imgs)
+    print("Done with all videos, converting to numpy array")
     testingData = np.asarray(testingData)
+    return testingData
 
-    return trainingData, testingData, difficultyLevels, overallScores, trainingIndexs, testingIndexs
-
-
-def loadTrainTestData():
+def loadTrainData(trainStart, trainEnd):
     print(PIL.__version__)
 
-    if path.exists(parameters.processedTrainingPath) and path.exists(parameters.processedTestingPath):
-        _, _, difficultyLevels, overallScores = loadMatFiles()
-        trainingData = np.load(parameters.processedTrainingPath).astype("uint8")
-        testingData = np.load(parameters.processedTestingPath).astype("uint8")
-        trainingIndices = scipy.io.loadmat("./data/split_300_70/training_idx.mat")['training_idx'][0].astype("uint8")-1
-        testingIndices = scipy.io.loadmat("./data/split_300_70/testing_idx.mat")['testing_idx'][0].astype("uint8")-1
-        print("Second Run")
-        print("trainingData:", trainingData.shape)
-        print("testingData:", testingData.shape)
-        print("difficultyLevels:", difficultyLevels.shape)
-        print("overallScores:", overallScores.shape)
-    else:
-        trainingData, testingData, difficultyLevels, overallScores, trainingIndices, testingIndices = processTrainTestData()
-        # after first run above, save for future uses, DO NOT check in the .npy file, they are too large
-        print("First Run")
-        print("trainingData:", trainingData.shape)
-        print("testingData:", testingData.shape)
-        print("difficultyLevels:", difficultyLevels.shape)
-        print("overallScores:", overallScores.shape)
+    difficultyLevels = scipy.io.loadmat("./data/diving_difficulty_level.mat")['difficulty_level'].reshape(-1).astype(
+        np.float32)
+    overallScores = scipy.io.loadmat("./data/diving_overall_scores.mat")['overall_scores'].reshape(-1).astype(
+        np.float32)
+    trainingIndexs = scipy.io.loadmat("./data/split_300_70/training_idx.mat")['training_idx'].reshape(-1) - 1
 
-        np.save("data/trainingData.npy", trainingData)
-        print("Finished saving training data , now we are saving testing data")
-        np.save("data/testingData.npy", testingData)
-        print("Finished saving testing")
-    print(difficultyLevels[trainingIndices].shape)
-    trainingDifficultyLevels = difficultyLevels[trainingIndices]
-    trainingOverallScores = overallScores[trainingIndices]
-    testingDifficultyLevels = difficultyLevels[testingIndices]
-    testingOverallScores = overallScores[testingIndices]
-    # test = trainingData[0][0].astype(np.uint8)
-    # temp = Image.fromarray(test)
-    #
-    # transformations = transforms.Compose([
-    #     transforms.Resize(256),
-    #     transforms.CenterCrop(224),
-    #     transforms.ToTensor(),
-    #     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    # ])
-    # processed = transformations(temp)
-    # train = []
-    # test = []
-    #
-    #
-    # for i in range(len(trainingData)):
-    #     imgs = []
-    #     for j in range(len(trainingData[i])):
-    #         img = Image.fromarray(trainingData[i][j])
-    #         transformations = transforms.Compose([
-    #             transforms.Resize(256),
-    #             transforms.CenterCrop(224),
-    #             transforms.ToTensor(),
-    #             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    #         ])
-    #         processed = transformations(img)
-    #         imgs.append(processed.numpy())
-    #     train.append(imgs)
-    # print("Finished processing training images")
-    #
-    #
-    # for i in range(len(testingData)):
-    #     imgs = []
-    #     for j in range(len(testingData[i])):
-    #         img = Image.fromarray(testingData[i][j])
-    #         transformations = transforms.Compose([
-    #             transforms.Resize(256),
-    #             transforms.CenterCrop(224),
-    #             transforms.ToTensor(),
-    #             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    #         ])
-    #         processed = transformations(img)
-    #         imgs.append(processed.numpy())
-    #     test.append(imgs)
-    # print("Done with all videos, converting to tensors")
-    # trainingData = torch.from_numpy(np.moveaxis(np.asarray(train), -1, 2))
-    # testingData = torch.from_numpy(np.moveaxis(np.asarray(test), -1, 2))
+    trainingIndexs = trainingIndexs[np.arange(trainStart, trainEnd)]
 
+    trainingDifficultyLevels = difficultyLevels[trainingIndexs]
+    trainingOverallScores = overallScores[trainingIndexs]
 
-    return trainingData, testingData, \
-                    torch.from_numpy(trainingDifficultyLevels),\
-                    torch.from_numpy(trainingOverallScores),\
-                    torch.from_numpy(testingDifficultyLevels),\
-                    torch.from_numpy(testingOverallScores)
+    trainingData = processTrainData(trainingIndexs)
+    print("In loadTrainData")
+    print("trainingData:", trainingData.shape)
+    print("difficultyLevels:", trainingDifficultyLevels.shape)
+    print("overallScores:", trainingOverallScores.shape)
+    return trainingData, torch.from_numpy(trainingDifficultyLevels),\
+        torch.from_numpy(trainingOverallScores)
 
+def loadTestData(testStart, testEnd):
+    difficultyLevels = scipy.io.loadmat("./data/diving_difficulty_level.mat")['difficulty_level'].reshape(-1).astype(
+        np.float32)
+    overallScores = scipy.io.loadmat("./data/diving_overall_scores.mat")['overall_scores'].reshape(-1).astype(
+        np.float32)
+    testingIndexs = scipy.io.loadmat("./data/split_300_70/testing_idx.mat")['testing_idx'].reshape(-1) - 1
 
+    testingIndexs = testingIndexs[np.arange(testStart, testEnd)]
+
+    testingDifficultyLevels = difficultyLevels[testingIndexs]
+    testingOverallScores = overallScores[testingIndexs]
+
+    testingData = processTestData(testingIndexs)
+    print("In loadTestData")
+    print("testingData:", testingData.shape)
+    print("difficultyLevels:", testingDifficultyLevels.shape)
+    print("overallScores:", testingOverallScores.shape)
+    return testingData, torch.from_numpy(testingDifficultyLevels), \
+           torch.from_numpy(testingOverallScores)

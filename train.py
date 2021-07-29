@@ -16,7 +16,6 @@ from cs486_project.transformer.VTN import VTN
 
 def transformBatch(batch):
     transformations = transforms.Compose([
-        # transforms.Resize(256),
         transforms.CenterCrop(240),
         transforms.Resize(224),
         transforms.ToTensor(),
@@ -93,27 +92,26 @@ def test(vtn, testingData, difficultyLevels, overallScores):
 
 
 
-
-
-
 def main():
-    trainingData, testingData, trainingDifficultyLevels, trainingOverallScores, testingDifficultyLevels, testingOverallScores = preprocess.loadTrainTestData()
-    print("In main")
-    print("trainingData:", trainingData.shape)
-    print("testingData:", testingData.shape)
-    print("trainingDifficultyLevels:", trainingDifficultyLevels.shape)
-    print("trainingOverallScores:", trainingOverallScores.shape)
-    print("testingDifficultyLevels:", testingDifficultyLevels.shape)
-    print("testingOverallScores:", testingOverallScores.shape)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
     vtn = VTN().to(device)
 
-    trainOnData(vtn, trainingData, trainingDifficultyLevels, trainingOverallScores)
-    test(vtn, testingData, testingDifficultyLevels, testingOverallScores)
+    for i in range(60):
+        trainingData, trainingDifficultyLevels, trainingOverallScores = preprocess.loadTrainData(i,i+5)
+        print("In main")
+        print("trainingData:", trainingData.shape)
+        print("trainingDifficultyLevels:", trainingDifficultyLevels.shape)
+        print("trainingOverallScores:", trainingOverallScores.shape)
+        trainOnData(vtn, trainingData, trainingDifficultyLevels, trainingOverallScores)
 
-
+    for i in range(14):
+        print("In main")
+        print("testingData:", trainingData.shape)
+        print("testingDifficultyLevels:", trainingDifficultyLevels.shape)
+        print("testingOverallScores:", trainingOverallScores.shape)
+        testingData, testingDifficultyLevels, testingOverallScores = preprocess.loadTestData(i,i+5)
+        test(vtn, testingData, testingDifficultyLevels, testingOverallScores)
 if __name__ == '__main__':
 
     main()
