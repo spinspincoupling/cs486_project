@@ -103,7 +103,7 @@ def main():
     for epoch in range(parameters.TOTAL_EPOCHS):
         epochTrainError = []
         for i in range(60):
-            trainingData, trainingDifficultyLevels, trainingOverallScores = preprocess.loadTrainData(i, i + 5)
+            trainingData, trainingDifficultyLevels, trainingOverallScores = preprocess.loadTrainData(5*i, 5*i + 5)
             print("In main")
             print("trainingData:", trainingData.shape)
             print("trainingDifficultyLevels:", trainingDifficultyLevels.size())
