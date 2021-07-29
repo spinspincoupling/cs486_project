@@ -109,7 +109,8 @@ def main():
             # print("trainingData:", trainingData.shape)
             # print("trainingDifficultyLevels:", trainingDifficultyLevels.size())
             # print("trainingOverallScores:", trainingOverallScores.size())
-            trainingData, trainingDifficultyLevels, trainingOverallScores = trainingData.to(device), trainingDifficultyLevels.to(device), trainingOverallScores.to(device)
+            trainingDifficultyLevels, trainingOverallScores = trainingDifficultyLevels.to(device), trainingOverallScores.to(device)
+            trainingData = torch.from_numpy(trainingData).to(device)
             vtn, loss = trainOnData(vtn, optimizer, trainingData, trainingDifficultyLevels, trainingOverallScores)
             epochTrainError.append(loss)
             if loss < best:
