@@ -34,6 +34,7 @@ def transformBatch(batch):
 
 
 criterion = nn.SmoothL1Loss()
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def trainOnData(vtn, optimizer, trainingData, difficultyLevels, overallScores):
@@ -57,6 +58,7 @@ def trainOnData(vtn, optimizer, trainingData, difficultyLevels, overallScores):
         batch = transformBatch(batch)
 
         vtn.zero_grad()
+        batch = torch.from_numpy(batch).to(device)
         output = vtn(batch, torch.unsqueeze(difficultyLevels[idx], 0))
         loss = criterion(output, torch.unsqueeze(overallScores[idx], 0))
         loss.backward()
@@ -95,7 +97,6 @@ def test(vtn, testingData, difficultyLevels, overallScores):
 
 
 def main():
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     vtn = VTN().to(device)
     optimizer = torch.optim.Adam(vtn.parameters(), lr=parameters.LEARNING_RATE)
     best = 500
@@ -110,7 +111,6 @@ def main():
             # print("trainingDifficultyLevels:", trainingDifficultyLevels.size())
             # print("trainingOverallScores:", trainingOverallScores.size())
             trainingDifficultyLevels, trainingOverallScores = trainingDifficultyLevels.to(device), trainingOverallScores.to(device)
-            trainingData = torch.from_numpy(trainingData).to(device)
             vtn, loss = trainOnData(vtn, optimizer, trainingData, trainingDifficultyLevels, trainingOverallScores)
             epochTrainError.append(loss)
             if loss < best:
