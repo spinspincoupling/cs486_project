@@ -92,24 +92,24 @@ def test(vtn, testingData, difficultyLevels, overallScores):
         idx += 1
         testError.append(loss.item())
     testErrorAvg = sum(testError) / len(testError)
-    print("Testing Error over ", testingData.shape[0], " is:", testErrorAvg)
+    print("Testing Error:", testErrorAvg)
     return output, testError
 
 
 def evaluate(path):
     print("Start testing model " + "...")
+    testErrors = []
     # code to load the frozen model
     net = VTN().to(device)
     net.load_state_dict(torch.load(path))
     for i in range(14):
-        # print("In main")
-        # print("testingData:", trainingData.shape)
-        # print("testingDifficultyLevels:", trainingDifficultyLevels.shape)
-        # print("testingOverallScores:", trainingOverallScores.shape)
         testingData, testingDifficultyLevels, testingOverallScores = preprocess.loadTestData(5 * i, 5 * i + 5)
         testingDifficultyLevels, testingOverallScores = testingDifficultyLevels.to(
             device), testingOverallScores.to(device)
         _, testError = test(net, testingData, testingDifficultyLevels, testingOverallScores)
+        testErrors += testError
+        testErrorAvg = sum(testErrors) / len(testErrors)
+        print("Average validation error:", testErrorAvg)
 
 
 def main():
@@ -137,6 +137,7 @@ def main():
         torch.save(vtn.state_dict(), "./frozen_model" + str(epoch) + ".pth")
         print("Epoch ", epoch, " Training Error:", epochTrainErrorAvg, sep=" ")
 
+    testErrors = []
     for i in range(14):
         # print("In main")
         # print("testingData:", trainingData.shape)
@@ -144,6 +145,9 @@ def main():
         # print("testingOverallScores:", trainingOverallScores.shape)
         testingData, testingDifficultyLevels, testingOverallScores = preprocess.loadTestData(5 * i, 5 * i + 5)
         output, testError = test(vtn, testingData, testingDifficultyLevels, testingOverallScores)
+        testErrors += testError
+    testErrorAvg = sum(testErrors) / len(testErrors)
+    print("Average validation error:", testErrorAvg)
 
 
 if __name__ == '__main__':
