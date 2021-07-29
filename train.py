@@ -99,7 +99,7 @@ def test(vtn, testingData, difficultyLevels, overallScores):
 def evaluate(path):
     print("Start testing model " + "...")
     # code to load the frozen model
-    net = VTN()
+    net = VTN().to(device)
     net.load_state_dict(torch.load(path))
     for i in range(14):
         # print("In main")
