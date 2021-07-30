@@ -116,3 +116,15 @@ def loadTestData(testStart, testEnd):
     # print("overallScores:", testingOverallScores.shape)
     return testingData, torch.from_numpy(testingDifficultyLevels), \
            torch.from_numpy(testingOverallScores)
+
+def getAllTestResponse():
+    difficultyLevels = scipy.io.loadmat("./data/diving_difficulty_level.mat")['difficulty_level'].reshape(-1).astype(
+        np.float32)
+    overallScores = scipy.io.loadmat("./data/diving_overall_scores.mat")['overall_scores'].reshape(-1).astype(
+        np.float32)
+    testingIndexs = scipy.io.loadmat("./data/split_300_70/testing_idx.mat")['testing_idx'].reshape(-1) - 1
+
+    testingDifficultyLevels = difficultyLevels[testingIndexs]
+    testingOverallScores = overallScores[testingIndexs]
+    return testingDifficultyLevels, testingOverallScores
+
