@@ -5,7 +5,7 @@ import preprocess
 import numpy as np
 from os import path
 import parameters
-import scipy.io
+import scipy.stats
 import time
 from PIL import Image
 import torchvision.transforms as transforms
@@ -101,7 +101,7 @@ def evaluate(path):
     outputs = []
     # code to load the frozen model
     net = VTN().to(device)
-    net.load_state_dict(torch.load(path))
+    net.load_state_dict(torch.load(path, map_location=device))
     start = time.time()
     for i in range(14):
         testingData, testingDifficultyLevels, testingOverallScores = preprocess.loadTestData(5 * i, 5 * i + 5)
@@ -111,11 +111,13 @@ def evaluate(path):
         testErrors += testError
         outputs += output
         testErrorAvg = sum(testErrors) / len(testErrors)
-        print("Average validation error:", testErrorAvg)
+        print("Average test error:", testErrorAvg)
     end = time.time()
     _, scores = preprocess.getAllTestResponse()
     MSE = np.square(np.subtract(scores, outputs)).mean()
+    correlation = scipy.stats.spearmanr(scores, outputs)
     print("mean squared error: ", MSE)
+    print("rank correlation: ", correlation[0])
     print("finish running test data takes: " + str(end - start))
 
 
