@@ -113,6 +113,9 @@ def evaluate(path):
         testErrorAvg = sum(testErrors) / len(testErrors)
         print("Average validation error:", testErrorAvg)
     end = time.time()
+    _, scores = preprocess.getAllTestResponse()
+    MSE = np.square(np.subtract(scores, outputs)).mean()
+    print("mean squared error: ", MSE)
     print("finish running test data takes: " + str(end - start))
 
 
