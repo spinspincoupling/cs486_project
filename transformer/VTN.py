@@ -14,7 +14,8 @@ class VTN(nn.Module):
         for i in range(num_stacks):
             decoder_stacks.append(AttnDecoder())
         self.decoder = nn.Sequential(*decoder_stacks)
-        self.fc = nn.Linear(d_embedding+1, 1)
+        # self.fc = nn.Linear(d_embedding+1, 1)
+        self.fc = nn.Linear(d_embedding, 1)
 
     def forward(self, clips, difficulty_levels):
         output = self.encoder(clips)
@@ -22,5 +23,6 @@ class VTN(nn.Module):
         output = self.decoder(output)
         output = torch.mean(output, 1)
         output = output.squeeze(0)
-        output = self.fc(torch.cat((output, difficulty_levels), 0))
+        # output = self.fc(torch.cat((output, difficulty_levels), 0))
+        output = difficulty_levels * self.fc(output)
         return output

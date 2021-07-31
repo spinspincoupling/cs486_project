@@ -117,7 +117,7 @@ def evaluate(path):
     MSE = np.square(np.subtract(scores, outputs)).mean()
     correlation = scipy.stats.spearmanr(scores, outputs)
     print("mean squared error: ", MSE)
-    print("rank correlation: ", correlation[0])
+    print("rank correlation: ", correlation)
     print("finish running test data takes: " + str(end - start))
 
 
